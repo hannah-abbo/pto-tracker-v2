@@ -17,16 +17,6 @@ const PTOTracker = () => {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Person colors for calendar
-  const personColors = {
-    'Kristina': { bg: 'bg-pink-100', border: 'border-pink-400', text: 'text-pink-800' },
-    'Danielle': { bg: 'bg-purple-100', border: 'border-purple-400', text: 'text-purple-800' },
-    'Danny': { bg: 'bg-blue-100', border: 'border-blue-400', text: 'text-blue-800' },
-    'Annabelle': { bg: 'bg-green-100', border: 'border-green-400', text: 'text-green-800' },
-    'Hannah': { bg: 'bg-yellow-100', border: 'border-yellow-400', text: 'text-yellow-800' },
-    'Uros': { bg: 'bg-indigo-100', border: 'border-indigo-400', text: 'text-indigo-800' }
-  };
-
   const ptoTypes = {
     'vacation': { label: 'Vacation/PTO', icon: Calendar, color: '#3B82F6', bgColor: 'bg-blue-50', countsAgainstBalance: true },
     'wfh': { label: 'Work From Home', icon: Home, color: '#10B981', bgColor: 'bg-green-50', countsAgainstBalance: false },
@@ -74,7 +64,6 @@ const PTOTracker = () => {
       }));
       
       setPtoEntries(entries);
-      console.log('Loaded entries:', entries); // Debug log
     } catch (error) {
       console.error('Error loading PTO entries:', error);
     }
@@ -317,14 +306,10 @@ const PTOTracker = () => {
   const getEntriesForDate = (date) => {
     if (!date) return [];
     
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
-    
     return ptoEntries.filter(entry => {
       const entryStart = new Date(entry.startDate);
       const entryEnd = new Date(entry.endDate);
-      entryStart.setHours(0, 0, 0, 0);
-      entryEnd.setHours(0, 0, 0, 0);
+      const checkDate = new Date(date);
       
       return checkDate >= entryStart && checkDate <= entryEnd;
     });
@@ -561,29 +546,19 @@ const PTOTracker = () => {
                           {date.getDate()}
                         </div>
                         <div className="space-y-1">
-                          {entries.slice(0, 4).map(entry => {
-                            const personColor = personColors[entry.member] || { bg: 'bg-gray-100', border: 'border-gray-400', text: 'text-gray-800' };
-                            const TypeIcon = ptoTypes[entry.type].icon;
-                            
-                            return (
-                              <div
-                                key={entry.id}
-                                className={`text-xs p-1 rounded border-l-2 ${personColor.bg} ${personColor.border} ${personColor.text}`}
-                                title={`${entry.member} - ${ptoTypes[entry.type].label}${entry.notes ? ': ' + entry.notes : ''}`}
-                              >
-                                <div className="flex items-center gap-1">
-                                  <TypeIcon size={10} />
-                                  <span className="truncate font-medium">{entry.member}</span>
-                                </div>
-                                <div className="text-xs opacity-75 truncate">
-                                  {ptoTypes[entry.type].label}
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {entries.length > 4 && (
+                          {entries.slice(0, 3).map(entry => (
+                            <div
+                              key={entry.id}
+                              className={`text-xs p-1 rounded truncate ${ptoTypes[entry.type].bgColor}`}
+                              style={{ borderLeft: `3px solid ${ptoTypes[entry.type].color}` }}
+                              title={`${entry.member} - ${ptoTypes[entry.type].label}`}
+                            >
+                              {entry.member}
+                            </div>
+                          ))}
+                          {entries.length > 3 && (
                             <div className="text-xs text-gray-500 p-1">
-                              +{entries.length - 4} more
+                              +{entries.length - 3} more
                             </div>
                           )}
                         </div>
@@ -595,34 +570,16 @@ const PTOTracker = () => {
             </div>
 
             {/* Legend */}
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Team Members</h3>
-              <div className="flex flex-wrap gap-4">
-                {teamMembers.map(member => {
-                  const personColor = personColors[member];
-                  return (
-                    <div key={member} className="flex items-center gap-2">
-                      <div 
-                        className={`w-4 h-4 rounded border-2 ${personColor.bg} ${personColor.border}`}
-                      ></div>
-                      <span className="text-sm text-gray-600">{member}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* PTO Type Legend */}
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">PTO Types</h3>
-              <div className="flex flex-wrap gap-4">
-                {Object.entries(ptoTypes).map(([type, config]) => (
-                  <div key={type} className="flex items-center gap-2">
-                    <config.icon size={16} style={{ color: config.color }} />
-                    <span className="text-sm text-gray-600">{config.label}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="mt-6 flex flex-wrap gap-4">
+              {Object.entries(ptoTypes).map(([type, config]) => (
+                <div key={type} className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded"
+                    style={{ backgroundColor: config.color }}
+                  ></div>
+                  <span className="text-sm text-gray-600">{config.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -698,7 +655,7 @@ const PTOTracker = () => {
           </div>
         )}
 
-        {/* Member View */}
+        {/* Member View - keep the existing code for this section */}
         {selectedView === 'member' && selectedMember && (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-4">{selectedMember}'s PTO Summary</h2>
@@ -788,7 +745,7 @@ const PTOTracker = () => {
           </div>
         )}
 
-        {/* Modals */}
+        {/* Modals remain the same */}
         {showBalanceForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
