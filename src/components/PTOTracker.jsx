@@ -74,7 +74,6 @@ const PTOTracker = () => {
       }));
       
       setPtoEntries(entries);
-      console.log('Loaded entries:', entries); // Debug log
     } catch (error) {
       console.error('Error loading PTO entries:', error);
     }
@@ -82,17 +81,11 @@ const PTOTracker = () => {
 
   const loadPTOBalances = async () => {
     try {
-      console.log('Loading PTO balances...');
       const { data, error } = await supabase
         .from('pto_balances')
         .select('*');
       
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
-      console.log('Raw balance data from Supabase:', data);
+      if (error) throw error;
       
       const balances = {};
       data.forEach(balance => {
@@ -102,12 +95,9 @@ const PTOTracker = () => {
         };
       });
       
-      console.log('Processed balances:', balances);
-      
       // Initialize missing members with defaults
       teamMembers.forEach(member => {
         if (!balances[member]) {
-          console.log(`Adding default balance for ${member}`);
           balances[member] = {
             vacationDays: 20,
             personalDays: 5
@@ -115,7 +105,6 @@ const PTOTracker = () => {
         }
       });
       
-      console.log('Final balances with defaults:', balances);
       setPtoBalances(balances);
       setLoading(false);
     } catch (error) {
@@ -195,26 +184,18 @@ const PTOTracker = () => {
     if (!balanceFormData.member) return;
 
     try {
-      console.log('Submitting balance form:', balanceFormData);
-      
       const balanceData = {
         member: balanceFormData.member,
         vacation_days: parseInt(balanceFormData.vacationDays),
         personal_days: parseInt(balanceFormData.personalDays)
       };
 
-      console.log('Balance data to save:', balanceData);
-
       const { error } = await supabase
         .from('pto_balances')
         .upsert([balanceData], { onConflict: 'member' });
 
-      if (error) {
-        console.error('Supabase upsert error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Balance saved successfully');
       await loadPTOBalances(); // Reload data
       resetBalanceForm();
     } catch (error) {
